@@ -1,0 +1,71 @@
+---
+- name: ensure tools are installed
+  become: yes
+  apt:
+    pkg:
+        - curl
+        - gnupg
+        - debian-archive-keyring
+        - apt-transport-https
+        - python-pip
+        - cloud-image-utils
+
+- name: install python gitlab api
+  pip:
+    name: python-gitlab
+
+- name: add gpg key
+  become: yes
+  apt_key:
+    url: https://packages.gitlab.com/runner/gitlab-runner/gpgkey 
+    state: present
+
+- name: add package repo
+  become: yes
+  apt_repository:
+    repo: deb https://packages.gitlab.com/runner/gitlab-runner/debian/ buster main
+    state: present
+
+- name: add src repo
+  become: yes
+  apt_repository:
+    repo: deb-src https://packages.gitlab.com/runner/gitlab-runner/debian/ buster main
+    state: present
+
+- name: update apt cache
+  become: yes
+  apt:
+    update-cache: yes
+
+- name: copy APT pinning file to ensure gitlab repo used
+  become: yes
+  copy:
+    src: pin-gitlab-runner.pref
+    dest: /etc/apt/preferences.d/pin-gitlab-runner.pref
+
+- name: install gitlab runner package
+  become: yes
+  apt:
+    name: gitlab-runner
+  environment:
+      GITLAB_RUNNER_DISABLE_SKEL: true
+
+- name: register runner
+  #no_log: True
+  community.general.gitlab_runner:
+    api_url: "{{ gitlab_url }}"
+    registration_token: "{{ gitlab_runner_token }}"
+    api_token: "{{ gitlab_api_token }}"
+    description: "{{ runner_description }}"
+    active: True
+    run_untagged: "{{ run_untagged }}"
+    tag_list: "{{ runner_tag_list  }}"
+    locked: False
+    state: present
+
+- name: modify runner config to use shell executor
+  become: yes
+  lineinfile:
+    path: /etc/gitlab-runner/config.toml
+    regexp: "^executor ="
+    line: executor = shell

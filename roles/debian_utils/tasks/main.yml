@@ -1,0 +1,46 @@
+---
+- name: install sudo
+  apt:
+      name: sudo
+      update_cache: yes
+
+- name: add users from vars with sudo priv
+  user:
+    name: "{{ item }}"
+    state: present
+    groups: "sudo"
+    append: yes
+  loop: "{{ users_list  }}"
+
+- name: install basic tools
+  apt:
+    pkg:
+        - vim
+        - git
+
+- name: install open-vm-tools if an esxi guest
+  apt:
+      name: open-vm-tools
+      state: present
+  when: esxi
+
+- name: install qemu-guest-agent if a kvm guest
+  apt:
+      name: qemu-guest-agent
+      state: present
+  when: kvm
+
+- name: pull vimrc from git
+  become: yes
+  become_user: tyler
+  git:
+      dest: /home/tyler/.vim_runtime
+      repo: 'https://github.com/amix/vimrc.git'
+      depth: 1
+
+- name: install basic vimrc
+  become: yes
+  become_user: tyler
+  copy:
+      src: /home/tyler/.vim_runtime/vimrcs/basic.vim
+      dest: /home/tyler/.vimrc
