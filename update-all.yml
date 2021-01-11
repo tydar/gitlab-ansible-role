@@ -1,6 +1,7 @@
 ---
 - name: Run all roles on runner hosts
   hosts: runners
+  remote_user: debian
   vars_files:
       - "{{ playbook_dir }}/secrets/keys.yml"
       - "{{ playbook_dir }}/secrets/vars.yml"

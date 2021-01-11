@@ -32,15 +32,14 @@
 
 - name: pull vimrc from git
   become: yes
-  become_user: tyler
   git:
-      dest: /home/tyler/.vim_runtime
+      dest: /root/.vim_runtime
       repo: 'https://github.com/amix/vimrc.git'
       depth: 1
 
 - name: install basic vimrc
   become: yes
-  become_user: tyler
   copy:
-      src: /home/tyler/.vim_runtime/vimrcs/basic.vim
-      dest: /home/tyler/.vimrc
+      src: /root/.vim_runtime/vimrcs/basic.vim
+      dest: /etc/vim/vimrc.local
+      remote_src: yes

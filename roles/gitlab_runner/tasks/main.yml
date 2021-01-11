@@ -11,6 +11,7 @@
         - cloud-image-utils
 
 - name: install python gitlab api
+  become: yes
   pip:
     name: python-gitlab
 
@@ -50,22 +51,31 @@
   environment:
       GITLAB_RUNNER_DISABLE_SKEL: true
 
+# hacked together solution from:
+# https://gitlab.com/gitlab-org/gitlab-runner/-/issues/985#note_141079433
+- name: check runner registration
+  become: yes
+  command: grep -Fq "token" /etc/gitlab-runner/config.toml
+  failed_when: false
+  ignore_errors: true
+  register: runner_is_registered
+
 - name: register runner
   #no_log: True
-  community.general.gitlab_runner:
-    api_url: "{{ gitlab_url }}"
-    registration_token: "{{ gitlab_runner_token }}"
-    api_token: "{{ gitlab_api_token }}"
-    description: "{{ runner_description }}"
-    active: True
-    run_untagged: "{{ run_untagged }}"
-    tag_list: "{{ runner_tag_list  }}"
-    locked: False
-    state: present
-
-- name: modify runner config to use shell executor
   become: yes
-  lineinfile:
-    path: /etc/gitlab-runner/config.toml
-    regexp: "^executor ="
-    line: executor = shell
+  command: >
+      gitlab-runner register
+      --non-interactive
+      --url "{{ gitlab_url }}"
+      --registration-token "{{ gitlab_runner_token }}"
+      --description "{{ runner_description }}"
+      --run-untagged="true"
+      --locked="false"
+      --executor="shell"
+  when: runner_is_registered.rc == 1
+
+- name: delete .bash_logout for gitlab user
+  become: yes
+  file:
+      path: /home/gitlab-runner/.bash_logout
+      state: absent
