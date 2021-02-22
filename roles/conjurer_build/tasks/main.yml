@@ -1,4 +1,9 @@
 ---
+- name: update apt cache
+  become: yes
+  apt:
+      update_cache: yes
+
 - name: install qemu-system
   become: yes
   apt:
@@ -29,6 +34,7 @@
           - qemu-utils
           - python3-pkg-resources
           - python-setuptools
+          - virtinst
 
 - name: install poetry
   become: yes

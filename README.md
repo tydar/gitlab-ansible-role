@@ -8,3 +8,7 @@ As you can see in the playbook `update-all.yml`, create a folder `secrets/` with
 
 * CRUD operations through handlers
 * Support for other Linux flavors (Fedora, openSUSE)
+
+## Known issue
+
+* Installing virtinst kicks user out to a grub-pc update. Resolve this programmatically with Ansible
